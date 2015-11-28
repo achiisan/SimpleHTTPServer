@@ -2,8 +2,11 @@
 A Simple HTTP Server for Completion of Requirements on CMSC 137.
 ###Created By:
 *Michael Bernard Bryan Doron*
+
 *CMSC 137 ST-3L*
+
 *Developed on Eclipse. Using OpenJDK Version 1.8 0_60*
+
 
 
 ###Some issues:
