@@ -6,17 +6,14 @@ import java.io.*;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.TimeZone;
+import java.util.regex.Pattern;
 
 public class WebServer extends Thread
-{
-	
-   
+{   
    private Socket server;
    
    private static ServerSocket serverSocket;
   
-   
-   
    public WebServer(Socket server) throws IOException
    {
          this.server = server ;
@@ -72,7 +69,7 @@ public static void waitConn(int port){
 
 }
 
-public static String generateResponse(BufferedReader file, String filename){
+public static String generateResponse(BufferedReader file, String filename, String table){
 	String rh = null;
 	final Date currentTime = new Date();
 
@@ -103,14 +100,20 @@ public static String generateResponse(BufferedReader file, String filename){
 	
 	
 	int filelength = 0;
-	String table = "<table><tr><th>Parameter</th><th>Value</th></tr></table>";
+	
 	String response = "";
 	String buf = "";
 	
 	if(file != null){
 		try {
 			while((buf = file.readLine())!= null){
+				if(Pattern.matches("\\s*<body>\\s*",buf ) && table != null){
+					response = response + buf+"\n";
+					
+					response = response + table + "\n";
+				}else{
 				response = response+buf+"\n";
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -135,7 +138,7 @@ public static String generateResponse(BufferedReader file, String filename){
 
 public void run()  {
     InputStreamReader in;
-    
+    String table = null;
 	try {
 		
 		in = new InputStreamReader(
@@ -143,39 +146,63 @@ public void run()  {
 	     BufferedReader inFromClient =
                  new BufferedReader(in);
          String clientSentence = inFromClient.readLine();
-         String clientSentence2;
-                     
-       while(( clientSentence2 = inFromClient.readLine()) != null){
-        	clientSentence += clientSentence2+"\n";
-        	if(clientSentence2.equals("")){
-        		break;
-        	}
-       }  
+//         String clientSentence2;
+//                     
+//       while(( clientSentence2 = inFromClient.readLine()) != null){
+//        	clientSentence += clientSentence2+"\n";
+//        	if(clientSentence2.equals("")){
+//        		break;
+//        	}
+//       }  
        
-       //System.out.println(clientSentence);
+       System.out.println(clientSentence);
          
+       
       if(clientSentence != null){
          String[] st = clientSentence.split(" ");
          FileReader in2 = null;
-         String st3 = st[1].replace("/", "");
+         
+         String st4 = st[1];
+         String [] st5  = st4.split("\\?");
+         
+         if(st5.length == 2){
+        	 table = "<table border=3><tr><th>Parameter</th><th>Value</th></tr>";
+        	String [] s = st5[1].split("\\&");
+        	
+        	for(String k : s){
+        		String [] d = k.split("=");
+        		for(String df: d){
+        			System.out.println(df);
+        		}
+        		table = table + "<tr><td>"+d[0]+"</td><td>"+d[1]+"</td></tr>";
+        	}
+        	table = table+"</table>";
+         }else{
+        	 table = null;
+         }
+         
+         String st3 = st5[0];
     	 
-    	 
-         if(st[1].equals("/")){
+         if(st3.equals("/")){
         	   in2 = new FileReader("index.html");
         	   st3 = "index.html";
          }else{
         	 try{
-        	   in2 = new FileReader(st[1].replace("/", ""));
+        	   in2 = new FileReader(st3.replace("/", ""));
         	 }catch(Exception e){}
          }	 
          String response;
          
          	if(in2 != null){
         	BufferedReader filegetter  = new BufferedReader(in2);
-        	 response =  generateResponse(filegetter, st3);
+        	if(table != null){
+        	 response =  generateResponse(filegetter, st3, table);
+        	}else{
+        		response =  generateResponse(filegetter, st3, null);
+        	}
         	 filegetter.close();
          	}else{
-         		 response =  generateResponse(null, st3);
+         		 response =  generateResponse(null, st3,null);
          	}
         	
         	 DataOutputStream os;
